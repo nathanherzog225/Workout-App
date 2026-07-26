@@ -8,20 +8,24 @@ export const TRAINING_DAYS = [
   { key: 'mon', name: 'Monday', short: 'Mon' },
 ];
 
-// Colour-coded muscle groups. `id` is what gets stored on an exercise.
+/**
+ * Colour-coded muscle groups. `id` is what gets stored on an exercise.
+ * Hues are spread so that muscles trained on the same day stay easy to tell apart.
+ */
 export const MUSCLES = [
   { id: 'chest', name: 'Chest', color: '#FF6B6B' },
   { id: 'back', name: 'Back', color: '#4DABF7' },
-  { id: 'lats', name: 'Lats', color: '#3BC9DB' },
-  { id: 'traps', name: 'Traps', color: '#5C7CFA' },
+  { id: 'lats', name: 'Lats', color: '#5C7CFA' },
+  { id: 'traps', name: 'Traps', color: '#9C6ADE' },
   { id: 'shoulders', name: 'Shoulders', color: '#FFA94D' },
-  { id: 'biceps', name: 'Biceps', color: '#38D9A9' },
-  { id: 'triceps', name: 'Triceps', color: '#22B8CF' },
+  { id: 'biceps', name: 'Biceps', color: '#3DDC97' },
+  { id: 'triceps', name: 'Triceps', color: '#17B8A6' },
   { id: 'forearms', name: 'Forearms', color: '#94D82D' },
-  { id: 'quads', name: 'Quads', color: '#9775FA' },
-  { id: 'hamstrings', name: 'Hamstrings', color: '#DA77F2' },
-  { id: 'glutes', name: 'Glutes', color: '#F783AC' },
+  { id: 'quads', name: 'Quads', color: '#8B5CF6' },
+  { id: 'hamstrings', name: 'Hamstrings', color: '#E879F9' },
+  { id: 'glutes', name: 'Glutes', color: '#FB7185' },
   { id: 'calves', name: 'Calves', color: '#A9E34B' },
+  { id: 'erectors', name: 'Lower Back', color: '#D9A05B' },
   { id: 'abs', name: 'Abs', color: '#FFD43B' },
 ];
 

@@ -1,13 +1,22 @@
-import { el, icon } from '../ui.js';
+import { el, icon, clear } from '../ui.js';
+import { commit } from '../store.js';
+import { WEEKS_PER_MESO } from '../constants.js';
+import { muscleColor, muscleName } from '../constants.js';
+import {
+  createMeso, seedLibraryFromSplit, getMeso,
+  dayProgress, weekProgress, dayMuscles, isDayStarted,
+} from '../model.js';
 
-/**
- * Home screen. Step 1 renders the empty state only — the meso/week/day UI
- * lands once the training split is defined.
- */
-export function renderHome({ state, mount, dock }) {
-  const hasMeso = state.mesos.length > 0;
+export function homeTopbar(state) {
+  const meso = getMeso(state);
+  if (!meso) return { title: 'Workout' };
+  return { title: meso.name, sub: `Week ${meso.currentWeek + 1} of ${WEEKS_PER_MESO}` };
+}
 
-  if (!hasMeso) {
+export function renderHome({ state, mount, dock, navigate }) {
+  const meso = getMeso(state);
+
+  if (!meso) {
     mount.append(
       el('div', { class: 'empty' },
         el('div', { class: 'empty__icon' }, icon('dumbbell')),
@@ -16,15 +25,98 @@ export function renderHome({ state, mount, dock }) {
       ),
     );
     dock.append(
-      el('button', { class: 'btn btn--primary btn--block', type: 'button', disabled: true },
-        icon('plus'), 'Start a mesocycle'),
+      el('button', {
+        class: 'btn btn--primary btn--block',
+        type: 'button',
+        onClick: () => {
+          commit((s) => {
+            seedLibraryFromSplit(s.library);
+            const created = createMeso({ name: `Meso ${s.mesos.length + 1}`, library: s.library });
+            s.mesos.push(created);
+            s.activeMesoId = created.id;
+          });
+        },
+      }, icon('plus'), 'Start a mesocycle'),
     );
     return;
   }
 
-  mount.append(el('div', { class: 'card' }, el('p', { class: 'muted small' }, 'Mesocycle view coming next.')));
+  mount.append(renderWeekStrip(meso));
+
+  const week = meso.weeks[meso.currentWeek];
+  for (const [dayIndex, day] of week.days.entries()) {
+    mount.append(renderDayCard(day, () => navigate({ name: 'day', weekIndex: meso.currentWeek, dayIndex })));
+  }
 }
 
-export function homeTitle() {
-  return { title: 'Workout', sub: null };
+/* ---------------- week selector ---------------- */
+
+function renderWeekStrip(meso) {
+  const strip = el('div', { class: 'weekstrip' });
+
+  for (let w = 0; w < WEEKS_PER_MESO; w++) {
+    const p = weekProgress(meso.weeks[w]);
+    const complete = p.daysFinished === meso.weeks[w].days.length;
+    const started = p.logged > 0;
+    const current = w === meso.currentWeek;
+
+    strip.append(
+      el('button', {
+        class: `weekpill${current ? ' is-current' : ''}${complete ? ' is-complete' : ''}${started && !complete ? ' is-started' : ''}`,
+        type: 'button',
+        'aria-current': current ? 'true' : null,
+        onClick: () => {
+          commit((s) => { getMeso(s, meso.id).currentWeek = w; });
+        },
+      },
+        el('span', { class: 'weekpill__n' }, String(w + 1)),
+        complete ? el('span', { class: 'weekpill__tick' }, icon('check')) : null,
+      ),
+    );
+  }
+
+  // Keep the selected week in view when the strip overflows.
+  queueMicrotask(() => {
+    strip.querySelector('.is-current')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  });
+
+  return el('div', { class: 'weekstrip-wrap' },
+    el('div', { class: 'weekstrip-label' }, 'Week'),
+    strip,
+  );
+}
+
+/* ---------------- day card ---------------- */
+
+function renderDayCard(day, onOpen) {
+  const { total, logged, pct } = dayProgress(day);
+  const finished = Boolean(day.finishedAt);
+  const started = isDayStarted(day) && !finished;
+
+  const status = finished
+    ? el('span', { class: 'pill pill--done' }, icon('check'), 'Done')
+    : started
+      ? el('span', { class: 'pill pill--active' }, 'In progress')
+      : el('span', { class: 'daycard__chev' }, icon('chevron'));
+
+  return el('button', { class: `daycard${finished ? ' is-finished' : ''}`, type: 'button', onClick: onOpen },
+    el('div', { class: 'daycard__head' },
+      el('span', { class: 'daycard__day' }, day.short),
+      el('span', { class: 'daycard__label' }, day.label),
+      status,
+    ),
+    el('div', { class: 'musclebar' },
+      dayMuscles(day).map((m) =>
+        el('span', {
+          class: 'musclebar__seg',
+          style: { background: muscleColor(m) },
+          title: muscleName(m),
+        })),
+    ),
+    el('div', { class: 'daycard__foot' },
+      el('div', { class: `pbar${finished ? ' pbar--good' : ''}` },
+        el('i', { style: { width: `${Math.round(pct * 100)}%` } })),
+      el('span', { class: 'daycard__meta' }, `${logged}/${total} sets`),
+    ),
+  );
 }

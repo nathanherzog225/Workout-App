@@ -1,39 +1,49 @@
 import { store, subscribe } from './store.js';
-import { el, clear, iconButton, toast } from './ui.js';
+import { el, clear, iconButton, toast, icon } from './ui.js';
 import { exportBackup, readBackupFile, restoreBackup } from './backup.js';
-import { renderHome, homeTitle } from './views/home.js';
+import { renderHome, homeTopbar } from './views/home.js';
+import { renderDay, dayTopbar } from './views/day.js';
 
-const topbar = document.getElementById('topbar');
-const view = document.getElementById('view');
-const dock = document.getElementById('dock');
+const topbarEl = document.getElementById('topbar');
+const viewEl = document.getElementById('view');
+const dockEl = document.getElementById('dock');
 
-/** Current screen. Kept in memory — this is a single-session-per-visit app. */
+const VIEWS = {
+  home: { render: renderHome, topbar: homeTopbar },
+  day: { render: renderDay, topbar: dayTopbar, back: () => ({ name: 'home' }) },
+};
+
+/** Current screen. Kept in memory — one screen at a time, no history stack needed. */
 let route = { name: 'home' };
 
 export function navigate(next) {
   route = next;
-  view.scrollTop = 0;
-  window.scrollTo(0, 0);
   render();
+  window.scrollTo(0, 0);
 }
 
 function render() {
   const state = store.state;
-  clear(topbar);
-  clear(view);
-  clear(dock);
+  const view = VIEWS[route.name] ?? VIEWS.home;
 
-  const { title, sub } = homeTitle(state);
-  topbar.append(
-    el('div', { class: 'topbar__title' }, title, sub && el('span', { class: 'topbar__sub' }, sub)),
+  clear(topbarEl);
+  clear(viewEl);
+  clear(dockEl);
+
+  const { title, sub } = view.topbar(state, route) ?? {};
+  // Note: native append() stringifies null, so only real nodes go in.
+  topbarEl.append(...[
+    view.back && iconButton('back', 'Back', () => navigate(view.back(route))),
+    el('div', { class: 'topbar__title' }, title ?? 'Workout',
+      sub ? el('span', { class: 'topbar__sub' }, sub) : null),
     iconButton('import', 'Restore from backup', pickBackupFile),
     iconButton('export', 'Export backup', () => {
       exportBackup();
       toast('Backup exported');
     }),
-  );
+  ].filter(Boolean));
 
-  if (route.name === 'home') renderHome({ state, mount: view, dock, navigate });
+  view.render({ state, route, mount: viewEl, dock: dockEl, navigate });
 }
 
 /** Hidden file input, created on demand so iOS shows the Files picker. */
@@ -52,6 +62,7 @@ function pickBackupFile() {
       );
       if (!ok) return;
       restoreBackup(next);
+      route = { name: 'home' };
       toast('Backup restored');
     } catch (err) {
       toast(err.message || 'Could not read that file', { error: true });

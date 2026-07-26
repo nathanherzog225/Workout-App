@@ -204,6 +204,241 @@ body {
   margin: 22px 2px 8px;
 }
 
+/* ---------- week selector ---------- */
+.weekstrip-wrap { margin: 0 0 16px; }
+
+.weekstrip-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0 2px 8px;
+}
+
+.weekstrip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Bleed to the screen edges so the strip reads as scrollable. */
+  margin: 0 calc(var(--pad) * -1);
+  padding: 2px var(--pad);
+  scroll-snap-type: x proximity;
+}
+.weekstrip::-webkit-scrollbar { display: none; }
+
+.weekpill {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: background .12s ease, color .12s ease, border-color .12s ease, transform .08s ease;
+}
+.weekpill:active { transform: scale(.94); }
+.weekpill.is-started { color: var(--text); border-color: var(--surface-3); }
+.weekpill.is-complete { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+.weekpill.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #04101F;
+}
+
+.weekpill__tick {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--good);
+  color: #062017;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+.weekpill__tick svg { width: 9px; height: 9px; stroke-width: 3.5; }
+.weekpill.is-current .weekpill__tick { border-color: var(--accent); }
+
+/* ---------- day card ---------- */
+.daycard {
+  display: block;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform .08s ease, border-color .12s ease;
+}
+.daycard:active { transform: scale(.99); border-color: var(--border); }
+.daycard.is-finished { opacity: .72; }
+
+.daycard__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.daycard__day {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 3px 7px;
+  flex: none;
+}
+
+.daycard__label {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daycard__chev { color: var(--text-faint); display: flex; flex: none; }
+.daycard__chev svg { width: 17px; height: 17px; }
+
+.daycard__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.daycard__meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-faint);
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Colour key for the muscles trained that day. */
+.musclebar {
+  display: flex;
+  gap: 3px;
+  height: 4px;
+}
+.musclebar__seg {
+  flex: 1;
+  border-radius: 2px;
+  min-width: 6px;
+}
+
+/* ---------- progress bar ---------- */
+.pbar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.pbar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width .25s ease;
+}
+.pbar--good i { background: var(--good); }
+
+/* ---------- status pills ---------- */
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.pill svg { width: 11px; height: 11px; stroke-width: 3; }
+.pill--done { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.pill--active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: #9EC2FF; }
+
+/* ---------- muscle group + exercise ---------- */
+.group { margin-bottom: 20px; }
+
+.group__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Colour-coded muscle label; --mc is set per group. */
+.muscletag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--mc, var(--text-dim));
+  background: color-mix(in srgb, var(--mc, #888) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mc, #888) 32%, transparent);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.exercise {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--mc, var(--border));
+  border-radius: var(--r-md);
+  padding: 12px 13px;
+  margin-bottom: 8px;
+}
+
+.exercise__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.exercise__name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  flex: 1;
+  min-width: 0;
+}
+
+.exercise__equip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  flex: none;
+}
+
 /* ---------- toast ---------- */
 .toast-host {
   position: fixed;

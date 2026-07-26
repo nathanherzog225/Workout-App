@@ -5,7 +5,7 @@ export function el(tag, props = {}, ...children) {
   for (const [k, v] of Object.entries(props || {})) {
     if (v == null || v === false) continue;
     if (k === 'class') node.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+    else if (k === 'style' && typeof v === 'object') setStyle(node, v);
     else if (k === 'dataset') Object.assign(node.dataset, v);
     else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'html') node.innerHTML = v;
@@ -14,6 +14,15 @@ export function el(tag, props = {}, ...children) {
   }
   append(node, children);
   return node;
+}
+
+/** Custom properties (--x) need setProperty; Object.assign silently drops them. */
+function setStyle(node, styles) {
+  for (const [prop, value] of Object.entries(styles)) {
+    if (value == null) continue;
+    if (prop.startsWith('--')) node.style.setProperty(prop, value);
+    else node.style[prop] = value;
+  }
 }
 
 function append(node, children) {
