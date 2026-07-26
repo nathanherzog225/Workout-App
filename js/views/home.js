@@ -10,7 +10,8 @@ import {
 export function homeTopbar(state) {
   const meso = getMeso(state);
   if (!meso) return { title: 'Workout' };
-  return { title: meso.name, sub: `Week ${meso.currentWeek + 1} of ${WEEKS_PER_MESO}` };
+  const week = Math.min(Math.max(meso.currentWeek | 0, 0), meso.weeks.length - 1);
+  return { title: meso.name, sub: `Week ${week + 1} of ${meso.weeks.length}` };
 }
 
 export function renderHome({ state, mount, dock, navigate }) {
@@ -41,24 +42,29 @@ export function renderHome({ state, mount, dock, navigate }) {
     return;
   }
 
-  mount.append(renderWeekStrip(meso));
+  // Clamp rather than trust: a hand-edited or partial backup could carry a
+  // currentWeek past the end of the meso, and that shouldn't blank the screen.
+  const weekIndex = Math.min(Math.max(meso.currentWeek | 0, 0), meso.weeks.length - 1);
+  const week = meso.weeks[weekIndex];
+  if (!week) return;
 
-  const week = meso.weeks[meso.currentWeek];
+  mount.append(renderWeekStrip(meso, weekIndex));
+
   for (const [dayIndex, day] of week.days.entries()) {
-    mount.append(renderDayCard(day, () => navigate({ name: 'day', weekIndex: meso.currentWeek, dayIndex })));
+    mount.append(renderDayCard(day, () => navigate({ name: 'day', weekIndex, dayIndex })));
   }
 }
 
 /* ---------------- week selector ---------------- */
 
-function renderWeekStrip(meso) {
+function renderWeekStrip(meso, currentWeek) {
   const strip = el('div', { class: 'weekstrip' });
 
-  for (let w = 0; w < WEEKS_PER_MESO; w++) {
+  for (let w = 0; w < meso.weeks.length; w++) {
     const p = weekProgress(meso.weeks[w]);
     const complete = p.daysFinished === meso.weeks[w].days.length;
     const started = p.logged > 0;
-    const current = w === meso.currentWeek;
+    const current = w === currentWeek;
 
     strip.append(
       el('button', {

@@ -1,5 +1,5 @@
 import { store, subscribe, commit } from './store.js';
-import { seedLibrary } from './model.js';
+import { ensureLibraryCurrent } from './model.js';
 import { el, clear, iconButton, toast, icon } from './ui.js';
 import { exportBackup, readBackupFile, restoreBackup } from './backup.js';
 import { renderHome, homeTopbar } from './views/home.js';
@@ -96,10 +96,9 @@ function pickBackupFile() {
   input.click();
 }
 
-// One-time: fill the exercise library with the built-in catalogue.
-if (!store.state.settings.librarySeeded) {
-  commit((s) => seedLibrary(s), { render: false });
-}
+// Bring saved data onto the current muscle/equipment vocabulary and make sure
+// the library matches the current catalogue. Both are no-ops once up to date.
+commit((s) => ensureLibraryCurrent(s), { render: false });
 
 subscribe(render);
 render();

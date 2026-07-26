@@ -1,4 +1,4 @@
-import { WEEKS_PER_MESO, TRAINING_DAYS } from './constants.js';
+import { WEEKS_PER_MESO, TRAINING_DAYS, canonicalMuscle, canonicalEquipment } from './constants.js';
 import { DEFAULT_SPLIT, DEFAULT_SETS } from './template.js';
 import { CATALOG } from './catalog.js';
 
@@ -58,7 +58,13 @@ export function seedLibraryFromSplit(library, split = DEFAULT_SPLIT) {
 }
 
 /**
- * Populate the library with the built-in catalogue plus the split, once.
+ * Bumped whenever the built-in catalogue changes, so existing saved data
+ * picks up new exercises on next load.
+ */
+export const LIBRARY_VERSION = 2;
+
+/**
+ * Populate the library with the built-in catalogue plus the split.
  * Idempotent by name+muscle, so re-running can't create duplicates.
  */
 export function seedLibrary(state) {
@@ -69,7 +75,42 @@ export function seedLibrary(state) {
   }
   seedLibraryFromSplit(state.library);
   state.settings.librarySeeded = true;
+  state.settings.libraryVersion = LIBRARY_VERSION;
   return state.library;
+}
+
+/**
+ * Bring saved data onto the current muscle/equipment vocabulary.
+ *
+ * Only renames labels — no logged weight, rep or set data is touched.
+ */
+export function migrateVocabulary(state) {
+  let changed = 0;
+  const fix = (obj) => {
+    const muscle = canonicalMuscle(obj.muscle);
+    const equipment = canonicalEquipment(obj.equipment);
+    if (muscle !== obj.muscle || equipment !== obj.equipment) changed += 1;
+    obj.muscle = muscle;
+    obj.equipment = equipment;
+  };
+
+  for (const entry of state.library) fix(entry);
+  for (const meso of state.mesos) {
+    for (const week of meso.weeks) {
+      for (const day of week.days) {
+        for (const exercise of day.exercises) fix(exercise);
+      }
+    }
+  }
+  return changed;
+}
+
+/** Run once per load: migrate old vocabulary, then top up the library. */
+export function ensureLibraryCurrent(state) {
+  const migrated = migrateVocabulary(state);
+  const stale = state.settings.libraryVersion !== LIBRARY_VERSION;
+  if (stale) seedLibrary(state);
+  return { migrated, seeded: stale };
 }
 
 /** Library sorted for a picker: same muscle first, then everything else by muscle. */
