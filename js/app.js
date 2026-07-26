@@ -16,15 +16,24 @@ const VIEWS = {
 /** Current screen. Kept in memory — one screen at a time, no history stack needed. */
 let route = { name: 'home' };
 
+let resetScroll = false;
+
 export function navigate(next) {
   route = next;
+  resetScroll = true;
   render();
-  window.scrollTo(0, 0);
 }
 
 function render() {
   const state = store.state;
   const view = VIEWS[route.name] ?? VIEWS.home;
+
+  // Logging a set re-renders the whole view; hold the scroll position so the
+  // list doesn't jump out from under you mid-workout.
+  const scrollY = window.scrollY;
+  const active = document.activeElement;
+  const focusKey = active?.dataset?.focus || null;
+  const caret = focusKey && active.selectionStart != null ? active.selectionStart : null;
 
   clear(topbarEl);
   clear(viewEl);
@@ -44,6 +53,20 @@ function render() {
   ].filter(Boolean));
 
   view.render({ state, route, mount: viewEl, dock: dockEl, navigate });
+
+  if (resetScroll) {
+    resetScroll = false;
+    window.scrollTo(0, 0);
+  } else {
+    window.scrollTo(0, scrollY);
+    if (focusKey) {
+      const next = viewEl.querySelector(`[data-focus="${focusKey}"]`);
+      if (next) {
+        next.focus({ preventScroll: true });
+        if (caret != null) try { next.setSelectionRange(caret, caret); } catch { /* not a text input */ }
+      }
+    }
+  }
 }
 
 /** Hidden file input, created on demand so iOS shows the Files picker. */

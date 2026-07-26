@@ -142,6 +142,7 @@ body {
 .btn--good { background: var(--good); border-color: var(--good); color: #062017; }
 .btn--ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
 .btn--danger { color: var(--danger); }
+.btn--quiet { background: transparent; color: var(--text-dim); }
 .btn--block { width: 100%; }
 .btn--sm { min-height: 34px; font-size: 13px; padding: 0 12px; border-radius: var(--r-sm); }
 
@@ -438,6 +439,102 @@ body {
   color: var(--text-faint);
   flex: none;
 }
+
+/* ---------- sets ---------- */
+.sets { margin-top: 10px; }
+
+/* set no. | weight | reps | log */
+.setrow {
+  display: grid;
+  grid-template-columns: 22px 1fr 1fr 46px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.setrow--head {
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.setrow--head span:nth-child(2),
+.setrow--head span:nth-child(3) { text-align: center; }
+
+.setrow__n {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.setinput {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  /* 16px keeps iOS from zooming the page on focus. */
+  font: 600 16px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  height: 42px;
+  padding: 0 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  transition: border-color .12s ease, background .12s ease;
+}
+.setinput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-3);
+}
+/* Last week's numbers, shown faintly. */
+.setinput::placeholder {
+  color: var(--text-faint);
+  font-weight: 500;
+  opacity: .75;
+}
+
+.logbox {
+  appearance: none;
+  height: 42px;
+  width: 46px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease, transform .08s ease;
+}
+.logbox svg { width: 18px; height: 18px; stroke-width: 2.6; }
+.logbox:active { transform: scale(.92); }
+
+.setrow.is-logged .logbox {
+  background: var(--good);
+  border-color: var(--good);
+  color: #05241A;
+}
+.setrow.is-logged .setinput {
+  border-color: color-mix(in srgb, var(--good) 34%, transparent);
+  background: color-mix(in srgb, var(--good) 9%, var(--surface-2));
+}
+
+.exercise__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+.exercise__count { margin-left: auto; }
 
 /* ---------- toast ---------- */
 .toast-host {

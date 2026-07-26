@@ -1,5 +1,5 @@
 /* Offline shell for the PWA. Bump CACHE when shipping changes. */
-const CACHE = 'workout-app-v1';
+const CACHE = 'workout-app-v3';
 
 const CORE = [
   '.',
@@ -11,7 +11,10 @@ const CORE = [
   'js/backup.js',
   'js/ui.js',
   'js/constants.js',
+  'js/model.js',
+  'js/template.js',
   'js/views/home.js',
+  'js/views/day.js',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
