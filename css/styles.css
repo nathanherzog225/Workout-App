@@ -1,0 +1,242 @@
+/* ---------- tokens ---------- */
+:root {
+  --bg: #0C0F14;
+  --surface: #151A22;
+  --surface-2: #1B222C;
+  --surface-3: #232B37;
+  --border: #262F3C;
+  --border-soft: #1E2632;
+
+  --text: #E9EDF5;
+  --text-dim: #97A1B2;
+  --text-faint: #5C6676;
+
+  --accent: #4C8DFF;
+  --accent-dim: #2C5AA8;
+  --good: #37D399;
+  --warn: #F5A524;
+  --danger: #F26D6D;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  --tap: 44px;
+  --pad: 14px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --topbar-h: 52px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Phone-first: the app column never exceeds a comfortable phone width. */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: calc(var(--safe-top) + 6px) var(--pad) 8px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: calc(var(--safe-top) + var(--topbar-h));
+}
+
+.topbar__title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__sub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0;
+}
+
+/* ---------- view + dock ---------- */
+.view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px var(--pad) 0;
+  padding-bottom: calc(var(--safe-bottom) + 24px);
+}
+
+.dock:not(:empty) {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 10px var(--pad) calc(var(--safe-bottom) + 10px);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  min-height: var(--tap);
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background .12s ease, transform .08s ease, opacity .12s ease;
+  user-select: none;
+}
+.btn:active { transform: scale(.975); background: var(--surface-3); }
+.btn:disabled { opacity: .45; pointer-events: none; }
+.btn svg { width: 18px; height: 18px; flex: none; display: block; }
+.btn--sm svg { width: 15px; height: 15px; }
+
+.btn--primary { background: var(--accent); border-color: var(--accent); color: #04101F; }
+.btn--primary:active { background: #6BA1FF; }
+.btn--good { background: var(--good); border-color: var(--good); color: #062017; }
+.btn--ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
+.btn--danger { color: var(--danger); }
+.btn--block { width: 100%; }
+.btn--sm { min-height: 34px; font-size: 13px; padding: 0 12px; border-radius: var(--r-sm); }
+
+/* Icon-only tap target in the top bar. */
+.iconbtn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+  transition: background .12s ease, transform .08s ease;
+}
+.iconbtn:active { transform: scale(.94); background: var(--surface-3); }
+.iconbtn svg { width: 19px; height: 19px; display: block; }
+
+/* ---------- cards ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.card__title {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 0 0 2px;
+}
+
+/* ---------- misc ---------- */
+.muted { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+.small { font-size: 13px; }
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  margin: auto 0;
+  color: var(--text-dim);
+}
+.empty__icon { opacity: .5; margin-bottom: 14px; }
+.empty__icon svg { width: 46px; height: 46px; }
+.empty h2 { font-size: 17px; font-weight: 650; color: var(--text); margin: 0 0 6px; }
+.empty p { margin: 0 0 20px; font-size: 14px; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 22px 2px 8px;
+}
+
+/* ---------- toast ---------- */
+.toast-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--safe-bottom) + 78px);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  padding: 0 16px;
+}
+.toast {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 550;
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .5);
+  animation: toast-in .18s ease both;
+  max-width: 100%;
+  text-align: center;
+}
+.toast--err { border-color: var(--danger); color: #FFD9D9; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
