@@ -13,8 +13,8 @@ export function uid(prefix = 'id') {
  * Construction
  * ------------------------------------------------------------------ */
 
-export function makeSet() {
-  return { id: uid('set'), weight: '', reps: '', logged: false };
+export function makeSet(weight = '', reps = '') {
+  return { id: uid('set'), weight, reps, logged: false };
 }
 
 /**
@@ -25,7 +25,11 @@ export function makeSet() {
  *  - `slotId` which position in the day this *fills*, stable across all 8
  *             weeks. Used to apply a swap to the rest of the mesocycle.
  */
-export function makeExercise({ name, muscle, equipment, libId, slotId }, setCount = DEFAULT_SETS) {
+export function makeExercise({ name, muscle, equipment, libId, slotId }, options = {}) {
+  // Accepts a plain set count, or { setCount, values } where values is
+  // [[weight, reps], ...] to pre-fill (unlogged) starting numbers.
+  const { setCount, values = null } = typeof options === 'number' ? { setCount: options } : options;
+  const count = setCount ?? values?.length ?? DEFAULT_SETS;
   return {
     id: uid('ex'),
     slotId: slotId || uid('slot'),
@@ -33,7 +37,7 @@ export function makeExercise({ name, muscle, equipment, libId, slotId }, setCoun
     name,
     muscle,
     equipment: equipment || '',
-    sets: Array.from({ length: setCount }, makeSet),
+    sets: Array.from({ length: count }, (_, i) => makeSet(values?.[i]?.[0] ?? '', values?.[i]?.[1] ?? '')),
   };
 }
 
@@ -105,12 +109,52 @@ export function migrateVocabulary(state) {
   return changed;
 }
 
-/** Run once per load: migrate old vocabulary, then top up the library. */
+export const SEED_VERSION = 1;
+
+/**
+ * Apply the template's week-1 starting numbers to a mesocycle created before
+ * they existed.
+ *
+ * Deliberately conservative: only a mesocycle with nothing logged, nothing
+ * typed and no finished day anywhere is touched, so this can never overwrite
+ * real training data. Runs once.
+ */
+export function applyWeek1Seed(state) {
+  if (state.settings.week1SeedVersion === SEED_VERSION) return 0;
+  state.settings.week1SeedVersion = SEED_VERSION;
+
+  let filled = 0;
+  for (const meso of state.mesos) {
+    const untouched = meso.weeks.every((w) => w.days.every((d) =>
+      !d.finishedAt && d.exercises.every((e) => e.sets.every((s) => !s.logged && !setHasNumbers(s)))));
+    if (!untouched) continue;
+
+    meso.weeks.forEach((week, wi) => {
+      for (const day of week.days) {
+        const plan = DEFAULT_SPLIT.find((p) => p.key === day.key);
+        if (!plan) continue;
+        for (const spec of plan.exercises) {
+          if (!spec.sets) continue;
+          const exercise = day.exercises.find((e) => e.name === spec.name);
+          if (!exercise) continue;
+          // Week 1 gets the numbers; later weeks get the matching set count, blank.
+          exercise.sets = spec.sets.map(([weight, reps]) =>
+            (wi === 0 ? makeSet(weight, reps) : makeSet()));
+          if (wi === 0) filled += exercise.sets.length;
+        }
+      }
+    });
+  }
+  return filled;
+}
+
+/** Run once per load: migrate old vocabulary, top up the library, seed week 1. */
 export function ensureLibraryCurrent(state) {
   const migrated = migrateVocabulary(state);
   const stale = state.settings.libraryVersion !== LIBRARY_VERSION;
   if (stale) seedLibrary(state);
-  return { migrated, seeded: stale };
+  const seededSets = applyWeek1Seed(state);
+  return { migrated, seeded: stale, seededSets };
 }
 
 /** Library sorted for a picker: same muscle first, then everything else by muscle. */
@@ -155,7 +199,12 @@ export function createMeso({ name, split = DEFAULT_SPLIT, library = [] }) {
           short: meta?.short ?? day.key,
           label: day.label,
           finishedAt: null,
-          exercises: day.exercises.map((ex) => makeExercise(ex, ex.setCount ?? DEFAULT_SETS)),
+          // Only week 1 carries the template's starting numbers; every later
+          // week gets the same plan with empty fields.
+          exercises: day.exercises.map((ex) => makeExercise(ex, {
+            setCount: ex.setCount ?? ex.sets?.length ?? DEFAULT_SETS,
+            values: w === 0 ? ex.sets : null,
+          })),
         };
       }),
     })),
@@ -351,6 +400,11 @@ export function removeExerciseFromDay(meso, { weekIndex, dayIndex, slotId, scope
   return { changed: allowed.length, blocked: blocked.length };
 }
 
+/** A set worth carrying forward as a placeholder: it has numbers in it. */
+export function setHasNumbers(set) {
+  return Boolean(set.weight || set.reps);
+}
+
 /**
  * Last week's sets for this exercise, used as faint placeholders.
  *
@@ -358,6 +412,9 @@ export function removeExerciseFromDay(meso, { weekIndex, dayIndex, slotId, scope
  * swapped-in exercise never inherits a different exercise's numbers. Looks back
  * to the nearest earlier week that actually contains it — normally that's just
  * the previous week.
+ *
+ * Filled-in numbers count whether or not the set was ticked off, so week 1's
+ * planned starting weights show through in week 2 before anything is logged.
  */
 export function previousSetsFor(meso, weekIndex, dayIndex, exercise) {
   for (let w = weekIndex - 1; w >= 0; w--) {
@@ -365,7 +422,7 @@ export function previousSetsFor(meso, weekIndex, dayIndex, exercise) {
     if (!day) continue;
     const match = day.exercises.find((ex) =>
       exercise.libId ? ex.libId === exercise.libId : ex.name === exercise.name);
-    if (match && match.sets.some((s) => s.logged)) {
+    if (match && match.sets.some(setHasNumbers)) {
       return { weekIndex: w, sets: match.sets };
     }
   }

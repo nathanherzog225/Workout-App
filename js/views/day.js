@@ -3,7 +3,7 @@ import { commit } from '../store.js';
 import { muscleColor, muscleName } from '../constants.js';
 import {
   getMeso, getDay, muscleGroups, makeSet, previousSetsFor, dayProgress,
-  hasLoggedSets, removeExerciseFromDay,
+  hasLoggedSets, removeExerciseFromDay, setHasNumbers,
 } from '../model.js';
 import { openSwapSheet, openAddExerciseSheet, openRemoveExerciseSheet } from './picker.js';
 
@@ -142,7 +142,7 @@ function renderExercise({ state, meso, route, day, exercise }) {
 function renderSetRow({ meso, exercise, set, index, previous }) {
   // Last week's numbers appear as faint placeholders only — never as values,
   // so an untouched set stays genuinely empty in the saved data.
-  const hint = previous?.logged ? previous : null;
+  const hint = previous && setHasNumbers(previous) ? previous : null;
 
   const field = (key, { inputmode, max }) => el('input', {
     class: 'setinput',
