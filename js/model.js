@@ -65,7 +65,15 @@ export function seedLibraryFromSplit(library, split = DEFAULT_SPLIT) {
  * Bumped whenever the built-in catalogue changes, so existing saved data
  * picks up new exercises on next load.
  */
-export const LIBRARY_VERSION = 2;
+export const LIBRARY_VERSION = 3;
+
+/** Exercise names corrected after release, mapped old → new. */
+const EXERCISE_RENAMES = {
+  'Dumbbbell Flexion Row': 'Dumbbell Flexion Row',
+};
+
+/** Day labels replaced by plain weekday names. */
+const LEGACY_DAY_LABELS = new Set(['Upper A', 'Lower A', 'Upper B', 'Lower B']);
 
 /**
  * Populate the library with the built-in catalogue plus the split.
@@ -93,20 +101,63 @@ export function migrateVocabulary(state) {
   const fix = (obj) => {
     const muscle = canonicalMuscle(obj.muscle);
     const equipment = canonicalEquipment(obj.equipment);
-    if (muscle !== obj.muscle || equipment !== obj.equipment) changed += 1;
+    const name = EXERCISE_RENAMES[obj.name] ?? obj.name;
+    if (muscle !== obj.muscle || equipment !== obj.equipment || name !== obj.name) changed += 1;
     obj.muscle = muscle;
     obj.equipment = equipment;
+    obj.name = name;
   };
 
   for (const entry of state.library) fix(entry);
   for (const meso of state.mesos) {
     for (const week of meso.weeks) {
       for (const day of week.days) {
+        // Days are identified by their weekday now, not an Upper/Lower label.
+        if (LEGACY_DAY_LABELS.has(day.label)) {
+          day.label = day.name;
+          changed += 1;
+        }
         for (const exercise of day.exercises) fix(exercise);
       }
     }
   }
+  changed += dedupeLibrary(state);
   return changed;
+}
+
+/**
+ * Collapse library entries that now share a name and muscle — a rename can
+ * make one collide with an existing entry. Exercises referencing a dropped
+ * entry are repointed at the survivor so nothing loses its history link.
+ */
+function dedupeLibrary(state) {
+  const keyOf = (e) => `${e.name.trim().toLowerCase()}|${e.muscle}`;
+  const survivors = new Map();
+  const remap = new Map();
+  const kept = [];
+
+  for (const entry of state.library) {
+    const key = keyOf(entry);
+    if (survivors.has(key)) {
+      remap.set(entry.id, survivors.get(key));
+      continue;
+    }
+    survivors.set(key, entry.id);
+    kept.push(entry);
+  }
+  if (!remap.size) return 0;
+
+  state.library = kept;
+  for (const meso of state.mesos) {
+    for (const week of meso.weeks) {
+      for (const day of week.days) {
+        for (const exercise of day.exercises) {
+          if (remap.has(exercise.libId)) exercise.libId = remap.get(exercise.libId);
+        }
+      }
+    }
+  }
+  return remap.size;
 }
 
 export const SEED_VERSION = 1;

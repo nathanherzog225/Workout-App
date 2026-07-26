@@ -1,5 +1,5 @@
 /* Offline shell for the PWA. Bump CACHE when shipping changes. */
-const CACHE = 'workout-app-v7';
+const CACHE = 'workout-app-v8';
 
 const CORE = [
   '.',

@@ -75,7 +75,7 @@ const BY_MUSCLE = {
     ['Deadlift', 'Barbell'],
     ['Deadlift (Flexion)', 'Barbell'],
     ['Dual Cable Pullover', 'Cable'],
-    ['Dumbbbell Flexion Row', 'Dumbbell'],
+    ['Dumbbell Flexion Row', 'Dumbbell'],
     ['Dumbbell Pullover', 'Dumbbell'],
     ['Dumbbell Row (2-Arm)', 'Dumbbell'],
     ['Dumbbell Row (2-Arm, Incline)', 'Dumbbell'],

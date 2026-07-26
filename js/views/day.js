@@ -10,7 +10,7 @@ import { openSwapSheet, openAddExerciseSheet, openRemoveExerciseSheet } from './
 export function dayTopbar(state, route) {
   const day = getDay(getMeso(state, route.mesoId ?? state.activeMesoId), route.weekIndex, route.dayIndex);
   if (!day) return { title: 'Workout' };
-  return { title: day.label, sub: `${day.name} · Week ${route.weekIndex + 1}` };
+  return { title: day.label, sub: `Week ${route.weekIndex + 1}` };
 }
 
 export function renderDay({ state, route, mount, dock, navigate }) {

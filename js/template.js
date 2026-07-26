@@ -18,7 +18,7 @@ export const DEFAULT_SETS = 2;
 export const DEFAULT_SPLIT = [
   {
     key: 'thu',
-    label: 'Upper A',
+    label: 'Thursday',
     exercises: [
       {
         name: 'Bench Press (Narrow Grip)', muscle: 'chest', equipment: 'Barbell',
@@ -56,7 +56,7 @@ export const DEFAULT_SPLIT = [
   },
   {
     key: 'fri',
-    label: 'Lower A',
+    label: 'Friday',
     exercises: [
       {
         name: 'Smith Machine Squat (Feet Forward)', muscle: 'quads', equipment: 'Smith Machine',
@@ -86,7 +86,7 @@ export const DEFAULT_SPLIT = [
   },
   {
     key: 'sat',
-    label: 'Upper B',
+    label: 'Saturday',
     exercises: [
       {
         name: 'Dumbbell Row (2-Arm)', muscle: 'back', equipment: 'Dumbbell',
@@ -124,7 +124,7 @@ export const DEFAULT_SPLIT = [
   },
   {
     key: 'mon',
-    label: 'Lower B',
+    label: 'Monday',
     exercises: [
       {
         name: 'Barbell Hip Thrust', muscle: 'glutes', equipment: 'Barbell',

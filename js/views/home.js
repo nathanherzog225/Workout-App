@@ -128,7 +128,6 @@ function renderDayCard(day, onOpen) {
 
   return el('button', { class: `daycard${finished ? ' is-finished' : ''}`, type: 'button', onClick: onOpen },
     el('div', { class: 'daycard__head' },
-      el('span', { class: 'daycard__day' }, day.short),
       el('span', { class: 'daycard__label' }, day.label),
       status,
     ),
