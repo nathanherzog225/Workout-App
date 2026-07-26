@@ -155,33 +155,62 @@ export function createMeso({ name, split = DEFAULT_SPLIT, library = [] }) {
           short: meta?.short ?? day.key,
           label: day.label,
           finishedAt: null,
-          exercises: day.exercises.map((ex) => makeExercise(ex)),
+          exercises: day.exercises.map((ex) => makeExercise(ex, ex.setCount ?? DEFAULT_SETS)),
         };
       }),
     })),
   };
 }
 
-/** A fresh, unlogged copy of a finished meso — same exercises, no numbers. */
-export function copyMesoAsNew(meso, name) {
-  const split = meso.weeks[0].days.map((day) => ({
+/**
+ * A fresh, unlogged mesocycle with the same plan — same exercises, same set
+ * counts, no numbers.
+ *
+ * Copied from the *last* week by default, since that reflects the plan you
+ * actually finished the block on (including any mid-meso swaps or added sets)
+ * rather than what you started it with.
+ */
+export function copyMesoAsNew(meso, { name, library = [], sourceWeekIndex = meso.weeks.length - 1 }) {
+  const source = meso.weeks[sourceWeekIndex] ?? meso.weeks[0];
+  const split = source.days.map((day) => ({
     key: day.key,
     label: day.label,
     exercises: day.exercises.map((ex) => ({
       name: ex.name,
       muscle: ex.muscle,
       equipment: ex.equipment,
-      libId: ex.libId,
+      setCount: ex.sets.length,
     })),
   }));
-  const next = createMeso({ name, split, library: [] });
-  // createMeso can't resolve libIds without the library, so carry them over directly.
-  for (const week of next.weeks) {
-    week.days.forEach((day, di) => {
-      day.exercises.forEach((ex, ei) => { ex.libId = split[di].exercises[ei].libId; });
-    });
+  return createMeso({ name, split, library });
+}
+
+/** Totals across a whole mesocycle, for the archive list. */
+export function mesoStats(meso) {
+  let total = 0;
+  let logged = 0;
+  let daysFinished = 0;
+  for (const week of meso.weeks) {
+    for (const day of week.days) {
+      if (day.finishedAt) daysFinished += 1;
+      const p = dayProgress(day);
+      total += p.total;
+      logged += p.logged;
+    }
   }
-  return next;
+  const days = meso.weeks.reduce((n, w) => n + w.days.length, 0);
+  return { total, logged, daysFinished, days, complete: days > 0 && daysFinished === days };
+}
+
+/** When the meso was last trained, for the archive subtitle. */
+export function lastTrainedAt(meso) {
+  let latest = null;
+  for (const week of meso.weeks) {
+    for (const day of week.days) {
+      if (day.finishedAt && (!latest || day.finishedAt > latest)) latest = day.finishedAt;
+    }
+  }
+  return latest;
 }
 
 /* ------------------------------------------------------------------ *

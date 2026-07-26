@@ -54,6 +54,7 @@ const PATHS = {
   minus: '<path d="M5 12h14"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  alert: '<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>',
   swap: '<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
   check: '<path d="m4 12.5 5 5L20 6.5"/>',
   chevron: '<path d="m9 5 7 7-7 7"/>',

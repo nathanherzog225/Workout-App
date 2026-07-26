@@ -8,13 +8,13 @@ import {
 import { openSwapSheet, openAddExerciseSheet, openRemoveExerciseSheet } from './picker.js';
 
 export function dayTopbar(state, route) {
-  const day = getDay(getMeso(state), route.weekIndex, route.dayIndex);
+  const day = getDay(getMeso(state, route.mesoId ?? state.activeMesoId), route.weekIndex, route.dayIndex);
   if (!day) return { title: 'Workout' };
   return { title: day.label, sub: `${day.name} · Week ${route.weekIndex + 1}` };
 }
 
 export function renderDay({ state, route, mount, dock, navigate }) {
-  const meso = getMeso(state);
+  const meso = getMeso(state, route.mesoId ?? state.activeMesoId);
   const day = getDay(meso, route.weekIndex, route.dayIndex);
   if (!day) return;
 
@@ -37,14 +37,19 @@ export function renderDay({ state, route, mount, dock, navigate }) {
     }, icon('plus'), 'Add exercise'),
   );
 
-  dock.append(renderFinishBar({ day, navigate }));
+  dock.append(renderFinishBar({ day, route, navigate }));
 }
 
 /* ------------------------------------------------------------------ *
  * Progress + finish
  * ------------------------------------------------------------------ */
 
-function renderFinishBar({ day, navigate }) {
+/** Returning home must keep whichever mesocycle we came from. */
+export function backToHome(route) {
+  return { name: 'home', mesoId: route.mesoId };
+}
+
+function renderFinishBar({ day, route, navigate }) {
   const { total, logged, pct } = dayProgress(day);
   const remaining = total - logged;
   const finished = Boolean(day.finishedAt);
@@ -84,7 +89,7 @@ function renderFinishBar({ day, navigate }) {
         buzz(18);
         commit(() => { day.finishedAt = new Date().toISOString(); });
         toast(`${day.label} finished · ${logged} set${logged === 1 ? '' : 's'}`);
-        navigate({ name: 'home' });
+        navigate(backToHome(route));
       },
     }, icon('check'), 'Finish workout'),
   );

@@ -7,6 +7,25 @@ everything is stored on-device in the browser and backed up with an export butto
 - **Storage:** one JSON blob in `localStorage`, written automatically on every change
 - **Backup:** export to a `.json` file, restore from one
 
+## How it works
+
+**Weeks are independent.** Every week holds its own copy of every exercise and
+set — no shared objects. That's what makes "never change earlier weeks or
+already-logged data" hold structurally rather than by convention.
+
+**Last week's numbers** appear as faint placeholders in the current week. They
+are placeholders only; an untouched set stays empty in the saved data. Logging a
+set you left blank falls back to the placeholder it was showing.
+
+**Swap / add / remove** an exercise asks whether to apply to just this day or
+the rest of the mesocycle. All three route through one guard (`editableWeeks`
+in `js/model.js`), which refuses to touch weeks earlier than the current one,
+finished workouts, or exercises with logged sets — and reports what it skipped.
+
+**Starting the next block** copies the plan from the *last* week of the current
+mesocycle — the exercises and set counts you actually finished on — into a
+fresh 8 weeks with no numbers. The old mesocycle is kept in full.
+
 ## Running it
 
 There's no build step, but ES modules need to be served over HTTP (not `file://`):
@@ -38,6 +57,10 @@ js/
   backup.js           export / restore
   ui.js               DOM + icon helpers
   constants.js        muscle colours, training days, equipment
+  model.js            mesocycle structure, swap/add guards
+  catalog.js          the exercise library (315 exercises)
+  template.js         the training split a new meso is built from
+  sheet.js            bottom sheets
   views/              screens
 icons/                app icons
 ```

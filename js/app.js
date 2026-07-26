@@ -3,7 +3,7 @@ import { ensureLibraryCurrent } from './model.js';
 import { el, clear, iconButton, toast, icon } from './ui.js';
 import { exportBackup, readBackupFile, restoreBackup } from './backup.js';
 import { renderHome, homeTopbar } from './views/home.js';
-import { renderDay, dayTopbar } from './views/day.js';
+import { renderDay, dayTopbar, backToHome } from './views/day.js';
 
 const topbarEl = document.getElementById('topbar');
 const viewEl = document.getElementById('view');
@@ -11,7 +11,7 @@ const dockEl = document.getElementById('dock');
 
 const VIEWS = {
   home: { render: renderHome, topbar: homeTopbar },
-  day: { render: renderDay, topbar: dayTopbar, back: () => ({ name: 'home' }) },
+  day: { render: renderDay, topbar: dayTopbar, back: backToHome },
 };
 
 /** Current screen. Kept in memory — one screen at a time, no history stack needed. */

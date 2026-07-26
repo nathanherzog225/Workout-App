@@ -777,6 +777,48 @@ body {
 .optionrow__chev { grid-area: chev; color: var(--text-faint); display: flex; }
 .optionrow__chev svg { width: 17px; height: 17px; }
 
+.sheet__warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn) 34%, transparent);
+  color: #F7CE8A;
+  line-height: 1.4;
+}
+.sheet__warn svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+
+/* ---------- meso summary + archive banner ---------- */
+.mesosummary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0 2px 10px;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+}
+.banner__text {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A9C8FF;
+}
+
 /* ---------- form fields ---------- */
 .field { display: block; margin-bottom: 18px; }
 .field__label {
