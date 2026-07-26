@@ -1,5 +1,6 @@
 import { WEEKS_PER_MESO, TRAINING_DAYS } from './constants.js';
 import { DEFAULT_SPLIT, DEFAULT_SETS } from './template.js';
+import { CATALOG } from './catalog.js';
 
 export function uid(prefix = 'id') {
   const rand = globalThis.crypto?.randomUUID
@@ -54,6 +55,30 @@ export function seedLibraryFromSplit(library, split = DEFAULT_SPLIT) {
     }
   }
   return library;
+}
+
+/**
+ * Populate the library with the built-in catalogue plus the split, once.
+ * Idempotent by name+muscle, so re-running can't create duplicates.
+ */
+export function seedLibrary(state) {
+  for (const entry of CATALOG) {
+    if (!findLibraryEntry(state.library, entry.name, entry.muscle)) {
+      state.library.push(makeLibraryEntry(entry));
+    }
+  }
+  seedLibraryFromSplit(state.library);
+  state.settings.librarySeeded = true;
+  return state.library;
+}
+
+/** Library sorted for a picker: same muscle first, then everything else by muscle. */
+export function libraryForMuscle(library, muscle, { excludeId = null } = {}) {
+  const usable = library.filter((e) => e.id !== excludeId);
+  return {
+    same: usable.filter((e) => e.muscle === muscle),
+    other: usable.filter((e) => e.muscle !== muscle),
+  };
 }
 
 /**
@@ -173,6 +198,87 @@ export function isDayStarted(day) {
 /** The distinct muscles trained on a day, in order of first appearance. */
 export function dayMuscles(day) {
   return [...new Set(day.exercises.map((ex) => ex.muscle))];
+}
+
+/* ------------------------------------------------------------------ *
+ * Editing the plan: swaps and additions
+ * ------------------------------------------------------------------ */
+
+/** True if any set on this exercise has been logged. */
+export function hasLoggedSets(exercise) {
+  return exercise.sets.some((s) => s.logged);
+}
+
+/**
+ * Which weeks a plan change may touch.
+ *
+ * Never earlier than the current week, never a day that's already finished,
+ * and never an exercise with logged sets. Those are returned as `blocked` so
+ * the UI can say what it skipped instead of silently dropping it.
+ */
+function editableWeeks(meso, fromWeek, dayIndex, slotId, scope) {
+  const lastWeek = scope === 'rest' ? meso.weeks.length - 1 : fromWeek;
+  const allowed = [];
+  const blocked = [];
+  for (let w = fromWeek; w <= lastWeek; w++) {
+    const day = getDay(meso, w, dayIndex);
+    if (!day) continue;
+    const exercise = slotId ? day.exercises.find((e) => e.slotId === slotId) : null;
+    if (day.finishedAt || (exercise && hasLoggedSets(exercise))) blocked.push(w);
+    else allowed.push(w);
+  }
+  return { allowed, blocked };
+}
+
+/**
+ * Replace the exercise filling `slotId` with a library entry.
+ *
+ * `scope` is 'day' (this week only) or 'rest' (this week through week 8).
+ * The slot keeps its identity so later weeks stay aligned; sets are reset to
+ * blank at the same count, because the old numbers belonged to the old lift.
+ */
+export function swapExercise(meso, { weekIndex, dayIndex, slotId, replacement, scope }) {
+  const { allowed, blocked } = editableWeeks(meso, weekIndex, dayIndex, slotId, scope);
+  for (const w of allowed) {
+    const day = getDay(meso, w, dayIndex);
+    const exercise = day.exercises.find((e) => e.slotId === slotId);
+    if (!exercise) continue;
+    exercise.id = uid('ex');
+    exercise.libId = replacement.id;
+    exercise.name = replacement.name;
+    exercise.muscle = replacement.muscle;
+    exercise.equipment = replacement.equipment || '';
+    exercise.sets = Array.from({ length: exercise.sets.length }, makeSet);
+  }
+  return { changed: allowed.length, blocked: blocked.length };
+}
+
+/** Append a new exercise to a day, optionally across the rest of the mesocycle. */
+export function addExerciseToDay(meso, { weekIndex, dayIndex, entry, scope, setCount = DEFAULT_SETS }) {
+  // One slot id shared by every week this lands in, so a later swap can target it.
+  const slotId = uid('slot');
+  const { allowed, blocked } = editableWeeks(meso, weekIndex, dayIndex, null, scope);
+  for (const w of allowed) {
+    getDay(meso, w, dayIndex).exercises.push(makeExercise({
+      name: entry.name,
+      muscle: entry.muscle,
+      equipment: entry.equipment,
+      libId: entry.id,
+      slotId,
+    }, setCount));
+  }
+  return { changed: allowed.length, blocked: blocked.length };
+}
+
+/** Remove an exercise from a day (and optionally the rest of the meso). Refuses logged ones. */
+export function removeExerciseFromDay(meso, { weekIndex, dayIndex, slotId, scope }) {
+  const { allowed, blocked } = editableWeeks(meso, weekIndex, dayIndex, slotId, scope);
+  for (const w of allowed) {
+    const day = getDay(meso, w, dayIndex);
+    const i = day.exercises.findIndex((e) => e.slotId === slotId);
+    if (i >= 0) day.exercises.splice(i, 1);
+  }
+  return { changed: allowed.length, blocked: blocked.length };
 }
 
 /**

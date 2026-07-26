@@ -3,7 +3,7 @@ import { commit } from '../store.js';
 import { WEEKS_PER_MESO } from '../constants.js';
 import { muscleColor, muscleName } from '../constants.js';
 import {
-  createMeso, seedLibraryFromSplit, getMeso,
+  createMeso, seedLibrary, getMeso,
   dayProgress, weekProgress, dayMuscles, isDayStarted,
 } from '../model.js';
 
@@ -30,7 +30,7 @@ export function renderHome({ state, mount, dock, navigate }) {
         type: 'button',
         onClick: () => {
           commit((s) => {
-            seedLibraryFromSplit(s.library);
+            seedLibrary(s);
             const created = createMeso({ name: `Meso ${s.mesos.length + 1}`, library: s.library });
             s.mesos.push(created);
             s.activeMesoId = created.id;

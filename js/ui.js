@@ -33,6 +33,15 @@ function append(node, children) {
   }
 }
 
+/**
+ * Append children to an existing node, flattening arrays and skipping nullish.
+ * Use this instead of node.append(), which stringifies arrays and null.
+ */
+export function appendAll(node, ...children) {
+  append(node, children);
+  return node;
+}
+
 export function clear(node) {
   while (node.firstChild) node.removeChild(node.firstChild);
 }
@@ -43,6 +52,8 @@ const PATHS = {
   import: '<path d="M12 15V3M12 3 8 7M12 3l4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   swap: '<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>',
   check: '<path d="m4 12.5 5 5L20 6.5"/>',
   chevron: '<path d="m9 5 7 7-7 7"/>',

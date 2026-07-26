@@ -1,7 +1,11 @@
-import { el, icon, buzz, toast } from '../ui.js';
+import { el, icon, buzz, toast, iconButton } from '../ui.js';
 import { commit } from '../store.js';
 import { muscleColor, muscleName } from '../constants.js';
-import { getMeso, getDay, muscleGroups, makeSet, previousSetsFor, dayProgress } from '../model.js';
+import {
+  getMeso, getDay, muscleGroups, makeSet, previousSetsFor, dayProgress,
+  hasLoggedSets, removeExerciseFromDay,
+} from '../model.js';
+import { openSwapSheet, openAddExerciseSheet, openRemoveExerciseSheet } from './picker.js';
 
 export function dayTopbar(state, route) {
   const day = getDay(getMeso(state), route.weekIndex, route.dayIndex);
@@ -20,10 +24,18 @@ export function renderDay({ state, route, mount, dock, navigate }) {
         el('div', { class: 'group__head' },
           el('span', { class: 'muscletag' }, muscleName(group.muscle)),
         ),
-        group.exercises.map((ex) => renderExercise({ meso, route, day, exercise: ex })),
+        group.exercises.map((ex) => renderExercise({ state, meso, route, day, exercise: ex })),
       ),
     );
   }
+
+  mount.append(
+    el('button', {
+      class: 'btn btn--block addex',
+      type: 'button',
+      onClick: () => openAddExerciseSheet({ state, meso, route }),
+    }, icon('plus'), 'Add exercise'),
+  );
 
   dock.append(renderFinishBar({ day, navigate }));
 }
@@ -90,13 +102,17 @@ function formatDate(iso) {
  * Exercise card
  * ------------------------------------------------------------------ */
 
-function renderExercise({ meso, route, day, exercise }) {
+function renderExercise({ state, meso, route, day, exercise }) {
   const previous = previousSetsFor(meso, route.weekIndex, route.dayIndex, exercise);
 
   return el('div', { class: 'exercise' },
     el('div', { class: 'exercise__head' },
       el('span', { class: 'exercise__name' }, exercise.name),
       exercise.equipment && el('span', { class: 'exercise__equip' }, exercise.equipment),
+      iconButton('swap', `Swap ${exercise.name}`,
+        () => openSwapSheet({ state, meso, route, exercise })),
+      iconButton('trash', `Remove ${exercise.name}`,
+        () => openRemoveExerciseSheet({ meso, route, exercise })),
     ),
 
     el('div', { class: 'sets' },
