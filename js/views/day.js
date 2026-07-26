@@ -1,7 +1,7 @@
 import { el, icon, buzz, toast } from '../ui.js';
 import { commit } from '../store.js';
 import { muscleColor, muscleName } from '../constants.js';
-import { getMeso, getDay, muscleGroups, makeSet, previousSetsFor } from '../model.js';
+import { getMeso, getDay, muscleGroups, makeSet, previousSetsFor, dayProgress } from '../model.js';
 
 export function dayTopbar(state, route) {
   const day = getDay(getMeso(state), route.weekIndex, route.dayIndex);
@@ -9,7 +9,7 @@ export function dayTopbar(state, route) {
   return { title: day.label, sub: `${day.name} · Week ${route.weekIndex + 1}` };
 }
 
-export function renderDay({ state, route, mount }) {
+export function renderDay({ state, route, mount, dock, navigate }) {
   const meso = getMeso(state);
   const day = getDay(meso, route.weekIndex, route.dayIndex);
   if (!day) return;
@@ -23,6 +23,66 @@ export function renderDay({ state, route, mount }) {
         group.exercises.map((ex) => renderExercise({ meso, route, day, exercise: ex })),
       ),
     );
+  }
+
+  dock.append(renderFinishBar({ day, navigate }));
+}
+
+/* ------------------------------------------------------------------ *
+ * Progress + finish
+ * ------------------------------------------------------------------ */
+
+function renderFinishBar({ day, navigate }) {
+  const { total, logged, pct } = dayProgress(day);
+  const remaining = total - logged;
+  const finished = Boolean(day.finishedAt);
+  const complete = remaining === 0 && total > 0;
+
+  const bar = el('div', { class: 'dockbar__row' },
+    el('div', { class: `pbar pbar--lg${finished || complete ? ' pbar--good' : ''}` },
+      el('i', { style: { width: `${Math.round(pct * 100)}%` } })),
+    el('span', { class: 'dockbar__count' }, `${logged}/${total}`),
+  );
+
+  if (finished) {
+    return el('div', { class: 'dockbar' },
+      bar,
+      el('div', { class: 'dockbar__row' },
+        el('span', { class: 'dockbar__done' }, icon('check'), `Finished ${formatDate(day.finishedAt)}`),
+        el('button', {
+          class: 'btn btn--sm btn--quiet',
+          type: 'button',
+          // Finishing must never be a trap — you can always reopen and keep logging.
+          onClick: () => commit(() => { day.finishedAt = null; }),
+        }, 'Reopen'),
+      ),
+    );
+  }
+
+  return el('div', { class: 'dockbar' },
+    bar,
+    el('button', {
+      class: 'btn btn--good btn--block',
+      type: 'button',
+      disabled: logged === 0,
+      onClick: () => {
+        if (remaining > 0 && !confirm(
+          `${remaining} set${remaining === 1 ? " isn't" : "s aren't"} logged. Finish anyway?`,
+        )) return;
+        buzz(18);
+        commit(() => { day.finishedAt = new Date().toISOString(); });
+        toast(`${day.label} finished · ${logged} set${logged === 1 ? '' : 's'}`);
+        navigate({ name: 'home' });
+      },
+    }, icon('check'), 'Finish workout'),
+  );
+}
+
+function formatDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return '';
   }
 }
 

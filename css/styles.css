@@ -369,6 +369,36 @@ body {
   transition: width .25s ease;
 }
 .pbar--good i { background: var(--good); }
+.pbar--lg { height: 8px; border-radius: 4px; }
+.pbar--lg i { border-radius: 4px; }
+
+/* ---------- bottom dock bar ---------- */
+.dockbar { display: flex; flex-direction: column; gap: 10px; }
+
+.dockbar__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dockbar__count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.dockbar__done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--good);
+  flex: 1;
+}
+.dockbar__done svg { width: 14px; height: 14px; stroke-width: 3; }
 
 /* ---------- status pills ---------- */
 .pill {
