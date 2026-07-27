@@ -35,14 +35,33 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-## On your iPhone
+## Putting it on your iPhone home screen
 
-Host the folder anywhere with HTTPS (GitHub Pages works), open it in Safari, then
-**Share → Add to Home Screen**. It launches standalone, works offline, and keeps its
-data between sessions.
+The app needs to be served over HTTPS for the service worker (and therefore the
+installable, chrome-less app) to work. GitHub Pages does this for free.
+
+**1. Turn on GitHub Pages** — repo **Settings → Pages**, set Source to
+*Deploy from a branch*, pick this repo's default branch and the `/ (root)` folder,
+then Save. After a minute the site is live at
+`https://<username>.github.io/<repo>/`.
+
+**2. Add it to your home screen** — open that URL **in Safari** (not Chrome — only
+Safari installs a proper standalone web app on iOS), then **Share → Add to Home
+Screen → Add**.
+
+It launches with no browser chrome, works offline, and keeps its data between
+sessions.
+
+> **Add to the home screen *before* entering real data.** iOS gives a home-screen
+> web app its own storage, separate from Safari's, so anything logged in Safari
+> beforehand won't appear in the installed app. If that happens, Export from Safari
+> and Restore inside the installed app.
 
 > Data lives in this browser's storage on this device. Deleting the app's site data,
 > or "Clear History and Website Data" in Safari, wipes it — export a backup regularly.
+
+Deploys land on the next launch: the service worker fetches the page from the
+network first and falls back to its cache only when offline.
 
 ## Layout
 
