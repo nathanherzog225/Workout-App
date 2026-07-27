@@ -113,7 +113,9 @@ if (!store.storageHealthy) {
   );
 }
 
-if ('serviceWorker' in navigator) {
+// The manifest link marks the full hosted build. The single-file build ships
+// no service worker, so don't request one that isn't there.
+if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) {
   addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is best-effort */ });
   });
