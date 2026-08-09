@@ -48,7 +48,7 @@ function readFromDisk() {
   }
   if (!text) return { state: freshState(), ok: true };
   try {
-    return { state: normalizeState(JSON.parse(text)), ok: true };
+    return { state: normalizeState(JSON.parse(text)), ok: true, rawText: text };
   } catch {
     // Corrupt payload: park it under a recovery key rather than overwriting it,
     // so nothing is destroyed silently.
@@ -60,6 +60,23 @@ function readFromDisk() {
 }
 
 const loaded = readFromDisk();
+
+/**
+ * Keep a verbatim copy of whatever was on disk before a structural migration
+ * rewrites it. Written once per schema version, never overwritten, so there is
+ * always a pre-migration snapshot to fall back on.
+ */
+export function snapshotBeforeMigration(version) {
+  const key = `${STORAGE_KEY}.pre-v${version}`;
+  try {
+    if (!loaded.rawText || localStorage.getItem(key)) return false;
+    localStorage.setItem(key, loaded.rawText);
+    return true;
+  } catch {
+    // Out of quota or storage disabled — the migration is additive either way.
+    return false;
+  }
+}
 
 const listeners = new Set();
 let writeTimer = null;

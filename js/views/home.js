@@ -4,7 +4,7 @@ import { openSheet } from '../sheet.js';
 import { muscleColor, muscleName } from '../constants.js';
 import {
   createMeso, copyMesoAsNew, seedLibrary, getMeso,
-  dayProgress, weekProgress, dayMuscles, isDayStarted,
+  dayProgress, weekProgress, dayMuscles, dayStatus,
   mesoStats, lastTrainedAt,
 } from '../model.js';
 
@@ -85,7 +85,8 @@ function renderWeekStrip(meso, currentWeek) {
 
   for (let w = 0; w < meso.weeks.length; w++) {
     const p = weekProgress(meso.weeks[w]);
-    const complete = p.daysFinished === meso.weeks[w].days.length;
+    // A week counts as done once every day is either finished or skipped.
+    const complete = p.daysSettled === meso.weeks[w].days.length;
     const started = p.logged > 0;
     const current = w === currentWeek;
 
@@ -117,16 +118,23 @@ function renderWeekStrip(meso, currentWeek) {
 
 function renderDayCard(day, onOpen) {
   const { total, logged, pct } = dayProgress(day);
-  const finished = Boolean(day.finishedAt);
-  const started = isDayStarted(day) && !finished;
+  const state = dayStatus(day);
+  const finished = state === 'finished';
+  const skipped = state === 'skipped';
 
-  const status = finished
-    ? el('span', { class: 'pill pill--done' }, icon('check'), 'Done')
-    : started
-      ? el('span', { class: 'pill pill--active' }, 'In progress')
-      : el('span', { class: 'daycard__chev' }, icon('chevron'));
+  const status = skipped
+    ? el('span', { class: 'pill pill--skip' }, icon('skip'), 'Skipped')
+    : finished
+      ? el('span', { class: 'pill pill--done' }, icon('check'), 'Done')
+      : state === 'active'
+        ? el('span', { class: 'pill pill--active' }, 'In progress')
+        : el('span', { class: 'daycard__chev' }, icon('chevron'));
 
-  return el('button', { class: `daycard${finished ? ' is-finished' : ''}`, type: 'button', onClick: onOpen },
+  return el('button', {
+    class: `daycard${finished ? ' is-finished' : ''}${skipped ? ' is-skipped' : ''}`,
+    type: 'button',
+    onClick: onOpen,
+  },
     el('div', { class: 'daycard__head' },
       el('span', { class: 'daycard__label' }, day.label),
       status,

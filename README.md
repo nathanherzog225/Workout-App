@@ -17,6 +17,18 @@ already-logged data" hold structurally rather than by convention.
 are placeholders only; an untouched set stays empty in the saved data. Logging a
 set you left blank falls back to the placeholder it was showing.
 
+**Skipping** is its own state, distinct from both logged and empty. A whole day
+carries `skippedAt`; a single set carries `skipped`. Skipping a day sets one
+timestamp and never touches individual sets, so Unskip restores the previous
+state exactly. Sets you logged before skipping the day stay logged.
+
+**References look back per set, not per week.** Each set finds the most recent
+earlier week where *that same set slot* was actually performed — `logged` and
+not `skipped` — so skipped weeks and skipped sets are stepped over rather than
+blanking the reference. That one lookup drives the weight arrows, the faint
+placeholders, and the fallback after a skip. It reads live state, so editing a
+set in a finished week immediately updates what later weeks show.
+
 **Swap / add / remove** an exercise asks whether to apply to just this day or
 the rest of the mesocycle. All three route through one guard (`editableWeeks`
 in `js/model.js`), which refuses to touch weeks earlier than the current one,

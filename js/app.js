@@ -1,5 +1,5 @@
-import { store, subscribe, commit } from './store.js';
-import { ensureLibraryCurrent } from './model.js';
+import { store, subscribe, commit, snapshotBeforeMigration } from './store.js';
+import { ensureLibraryCurrent, needsStructuralMigration, STATE_VERSION } from './model.js';
 import { el, clear, iconButton, toast, icon } from './ui.js';
 import { exportBackup, readBackupFile, restoreBackup } from './backup.js';
 import { renderHome, homeTopbar } from './views/home.js';
@@ -96,8 +96,9 @@ function pickBackupFile() {
   input.click();
 }
 
-// Bring saved data onto the current muscle/equipment vocabulary and make sure
-// the library matches the current catalogue. Both are no-ops once up to date.
+// Bring saved data up to date: structure, vocabulary, library, week-1 seed.
+// All no-ops once current. Anything structural gets a verbatim snapshot first.
+if (needsStructuralMigration(store.state)) snapshotBeforeMigration(STATE_VERSION);
 commit((s) => ensureLibraryCurrent(s), { render: false });
 
 subscribe(render);

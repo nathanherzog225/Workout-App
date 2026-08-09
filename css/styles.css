@@ -461,11 +461,11 @@ body {
 /* ---------- sets ---------- */
 .sets { margin-top: 10px; }
 
-/* set no. | weight | reps | log */
+/* set no. | weight | reps | log | skip */
 .setrow {
   display: grid;
-  grid-template-columns: 22px 1fr 1fr 46px;
-  gap: 8px;
+  grid-template-columns: 18px 1fr 1fr 44px 32px;
+  gap: 6px;
   align-items: center;
   margin-bottom: 6px;
 }
@@ -553,6 +553,71 @@ body {
   border-top: 1px solid var(--border-soft);
 }
 .exercise__count { margin-left: auto; }
+
+/* ---------- weight trend arrow ---------- */
+/* Sits inside the weight field: the comparison is weight-only, so anywhere
+   else invites reading it against reps. */
+.setfield { position: relative; display: flex; min-width: 0; }
+.setfield .setinput { padding-right: 22px; }
+
+.trend {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  pointer-events: none;
+}
+.trend svg { width: 13px; height: 13px; stroke-width: 2.8; }
+.trend--up { color: var(--good); }
+.trend--down { color: var(--danger); }
+.trend--same { color: var(--text-faint); }
+
+/* ---------- skipped sets ---------- */
+.skipbox {
+  appearance: none;
+  height: 42px;
+  width: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color .12s ease, background .12s ease, transform .08s ease;
+}
+.skipbox svg { width: 16px; height: 16px; }
+.skipbox:active { transform: scale(.9); }
+.skipbox.is-on { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.skipbox:disabled { opacity: .3; pointer-events: none; }
+
+.setrow.is-skipped .setinput {
+  opacity: .45;
+  border-style: dashed;
+  text-decoration: line-through;
+}
+.setrow.is-skipped .setrow__n { opacity: .45; }
+.setrow.is-skipped .logbox { opacity: .35; }
+
+.exercise.is-skipped { opacity: .6; }
+
+/* Compound selector: .banner is declared later in this file, so a single
+   class here would lose the cascade and render the skip banner accent-blue. */
+.banner.banner--skip {
+  background: color-mix(in srgb, var(--warn) 13%, transparent);
+  border-color: color-mix(in srgb, var(--warn) 34%, transparent);
+}
+.banner.banner--skip .banner__text { color: #F7CE8A; }
+
+.pill--skip { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.daycard.is-skipped { opacity: .6; }
+
+/* ---------- dock actions ---------- */
+.dockbar__actions { display: flex; gap: 8px; }
+.dockbar__skip { flex: none; }
+.dockbar__finish { flex: 1; }
 
 /* ---------- bottom sheet ---------- */
 .sheet-host[hidden] { display: none; }
