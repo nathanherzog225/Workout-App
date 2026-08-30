@@ -951,3 +951,232 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- zone 2 cardio ---------- */
+/*
+ * Deliberately unlike an exercise card: a tinted panel with a full accent
+ * border and a ring, so it reads as a different kind of thing at a glance
+ * rather than as one more muscle group. --cc is the cardio accent.
+ */
+
+.cardiotag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--cc);
+  background: color-mix(in srgb, var(--cc) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cc) 32%, transparent);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.cardio {
+  margin: 22px 0 8px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--cc) 30%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cc) 9%, transparent), transparent 70%),
+    var(--surface);
+}
+
+.cardio__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cardio__met {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cc);
+}
+
+.cardio__met svg { width: 14px; height: 14px; }
+
+/* inline-flex would otherwise win over the hidden attribute. */
+.cardio__met[hidden] { display: none; }
+
+.cardio__body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cardio__fields { flex: 1; min-width: 0; }
+
+.cardio__label { display: block; }
+
+.cardio__labeltext {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+}
+
+.cardio__input {
+  width: 100%;
+  height: var(--tap);
+  padding: 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--cc) 26%, var(--border));
+  border-radius: var(--r-sm);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.cardio__input:focus {
+  outline: none;
+  border-color: var(--cc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cc) 22%, transparent);
+}
+
+.cardio__readout {
+  margin-top: 7px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+/* The true total, never capped — only the ring's fill is. */
+.cardio__minutes {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---------- cardio ring ---------- */
+
+.cardioring {
+  flex: 0 0 auto;
+  width: 76px;
+  height: 76px;
+}
+
+.cardioring__svg { width: 100%; height: 100%; display: block; }
+
+.cardioring__track {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 7;
+}
+
+.cardioring__arc {
+  fill: none;
+  stroke: var(--cc);
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .25s ease;
+}
+
+.cardioring.is-met .cardioring__arc {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--cc) 55%, transparent));
+}
+
+/* ---------- weekly cardio summary ---------- */
+
+.cardioweek {
+  margin: 4px 0 20px;
+  padding: 13px 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid color-mix(in srgb, var(--cc) 26%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cc) 8%, transparent), transparent 70%),
+    var(--surface);
+}
+
+.cardioweek.is-complete {
+  border-color: color-mix(in srgb, var(--cc) 55%, transparent);
+}
+
+.cardioweek__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cardioweek__total {
+  margin-left: auto;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.cardioweek__total strong {
+  font-size: 17px;
+  color: var(--text);
+}
+
+.cardioweek__bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.cardioweek__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cc);
+  transition: width .25s ease;
+}
+
+.cardioweek__days {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* One chip per training day: which of the four actually hit the full 45. */
+.cardiochip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 2px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+}
+
+.cardiochip.is-met {
+  background: color-mix(in srgb, var(--cc) 16%, transparent);
+  border-color: color-mix(in srgb, var(--cc) 45%, transparent);
+}
+
+.cardiochip__day {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cardiochip.is-met .cardiochip__day { color: var(--cc); }
+
+.cardiochip__min {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.cardiochip.is-met .cardiochip__min { color: var(--text); }
+
+.cardioweek__foot {
+  margin-top: 9px;
+  color: var(--text-dim);
+}

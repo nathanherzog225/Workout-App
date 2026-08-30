@@ -2,13 +2,15 @@ import { el, icon, buzz, toast, iconButton } from '../ui.js';
 import { commit } from '../store.js';
 import { muscleColor, muscleName } from '../constants.js';
 import {
-  getMeso, getDay, muscleGroups, dayProgress, dayStatus,
+  getMeso, getDay, muscleGroups, dayProgress, dayStatus, weekProgress,
   removeExerciseFromDay, setHasNumbers,
   lastPerformedSet, placeholderSetFor, weightTrend,
   skipDay, unskipDay, skipSet, unskipSet,
   addSetToExercise, removeSetFromExercise,
 } from '../model.js';
 import { openSwapSheet, openAddExerciseSheet, openRemoveExerciseSheet } from './picker.js';
+import { renderCardioCard, renderWeekCardio } from './cardio.js';
+import { openSheet } from '../sheet.js';
 
 export function dayTopbar(state, route) {
   const day = getDay(getMeso(state, route.mesoId ?? state.activeMesoId), route.weekIndex, route.dayIndex);
@@ -44,7 +46,10 @@ export function renderDay({ state, route, mount, dock, navigate }) {
     }, icon('plus'), 'Add exercise'),
   );
 
-  dock.append(renderFinishBar({ day, route, navigate }));
+  // Its own module, below the lifting block — cardio is tracked, not "a set".
+  mount.append(renderCardioCard({ day }));
+
+  dock.append(renderFinishBar({ meso, day, route, navigate }));
 }
 
 /** Returning home must keep whichever mesocycle we came from. */
@@ -71,7 +76,7 @@ function renderSkippedBanner(day) {
  * Progress + finish
  * ------------------------------------------------------------------ */
 
-function renderFinishBar({ day, route, navigate }) {
+function renderFinishBar({ meso, day, route, navigate }) {
   const { total, logged, skipped, pct } = dayProgress(day);
   const remaining = total - logged;
   const status = dayStatus(day);
@@ -136,8 +141,14 @@ function renderFinishBar({ day, route, navigate }) {
           )) return;
           buzz(18);
           commit(() => { day.finishedAt = new Date().toISOString(); });
-          toast(`${day.label} finished · ${logged} set${logged === 1 ? '' : 's'}`);
           navigate(backToHome(route));
+          // Finishing the last outstanding day closes out the week, so that's
+          // the moment the weekly cardio total is worth putting in front of you.
+          if (weekJustCompleted(meso, route.weekIndex)) {
+            openWeekCardioSheet(meso, route.weekIndex);
+          } else {
+            toast(`${day.label} finished · ${logged} set${logged === 1 ? '' : 's'}`);
+          }
         },
       }, icon('check'), 'Finish workout'),
     ),
@@ -150,6 +161,33 @@ function formatDate(iso) {
   } catch {
     return '';
   }
+}
+
+/** True once every day in the week is either finished or deliberately skipped. */
+function weekJustCompleted(meso, weekIndex) {
+  const week = meso?.weeks?.[weekIndex];
+  if (!week) return false;
+  return weekProgress(week).daysSettled === week.days.length;
+}
+
+/** The week's cardio summary, shown on finishing the week. Also lives on home. */
+function openWeekCardioSheet(meso, weekIndex) {
+  openSheet({
+    title: 'Week complete',
+    subtitle: `Week ${weekIndex + 1} · zone 2 cardio`,
+    build: (api) => [
+      renderWeekCardio(meso.weeks[weekIndex]),
+      el('p', { class: 'sheet__note small muted' },
+        'This summary stays on the home screen for week ',
+        el('strong', {}, String(weekIndex + 1)), '.'),
+      el('button', {
+        class: 'btn btn--primary btn--block',
+        type: 'button',
+        style: { marginTop: '16px' },
+        onClick: () => api.close(),
+      }, 'Done'),
+    ],
+  });
 }
 
 /* ------------------------------------------------------------------ *

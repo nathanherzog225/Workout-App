@@ -78,3 +78,19 @@ export const EQUIPMENT_ALIASES = {
 export function canonicalEquipment(name) {
   return EQUIPMENT_ALIASES[name] ?? name;
 }
+
+/* ------------------------------------------------------------------ *
+ * Zone 2 cardio
+ * ------------------------------------------------------------------ */
+
+/** Daily zone 2 target, in minutes. */
+export const CARDIO_DAILY_GOAL = 45;
+
+/** Weekly target: the daily goal across all four training days. */
+export const CARDIO_WEEKLY_GOAL = CARDIO_DAILY_GOAL * TRAINING_DAYS.length;
+
+/**
+ * Cardio's accent, deliberately outside the four muscle colour families so a
+ * cardio module can never be misread as a muscle group.
+ */
+export const CARDIO_COLOR = '#22D3EE';

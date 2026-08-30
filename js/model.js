@@ -1,4 +1,7 @@
-import { WEEKS_PER_MESO, TRAINING_DAYS, canonicalMuscle, canonicalEquipment } from './constants.js';
+import {
+  WEEKS_PER_MESO, TRAINING_DAYS, canonicalMuscle, canonicalEquipment,
+  CARDIO_DAILY_GOAL, CARDIO_WEEKLY_GOAL,
+} from './constants.js';
 import { DEFAULT_SPLIT, DEFAULT_SETS } from './template.js';
 import { CATALOG } from './catalog.js';
 
@@ -30,6 +33,20 @@ export function makeSet(weight = '', reps = '', slotId = null) {
 /** A set counts as performed only if it was actually logged and not skipped. */
 export function isPerformed(set) {
   return Boolean(set?.logged) && !set?.skipped;
+}
+
+/**
+ * A day's zone 2 cardio block.
+ *
+ * Its own field on the day, deliberately kept clear of `exercises` and sets —
+ * cardio is one number a day, with none of the week-to-week look-back, slot
+ * identity or logged/skipped machinery a set carries.
+ *
+ * Minutes are held as the raw typed string (same as weight and reps) so a
+ * half-typed value round-trips; `cardioMinutes()` is what reads a number out.
+ */
+export function makeCardio() {
+  return { zone2Minutes: '', updatedAt: null };
 }
 
 /**
@@ -186,15 +203,16 @@ function dedupeLibrary(state) {
 /**
  * Structural schema version. Bumped when new fields are added to saved data.
  *   4 — per-set `slotId` + `skipped`, per-day `skippedAt`
+ *   5 — per-day `cardio` block (zone 2 minutes)
  */
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export function needsStructuralMigration(state) {
   return (state.settings?.stateVersion ?? 0) < STATE_VERSION;
 }
 
 /**
- * Add the fields introduced in v4 to existing saved data.
+ * Add the fields introduced in v4 and v5 to existing saved data.
  *
  * Strictly additive: no weight, rep, logged flag, finish stamp or exercise is
  * read for anything other than counting, and none is modified. Set slot ids are
@@ -203,10 +221,14 @@ export function needsStructuralMigration(state) {
  * reproduces the positional matching the app used before, leaving every
  * existing placeholder pointing exactly where it pointed yesterday.
  *
+ * The v5 cardio block is added the same way: a day that already has one is
+ * left exactly as it is, so a migration re-run can never overwrite minutes
+ * you've logged.
+ *
  * Idempotent: fields already present are left alone.
  */
 export function migrateStructure(state) {
-  const stats = { setSlots: 0, setsFlagged: 0, daysFlagged: 0, untouchedValues: 0 };
+  const stats = { setSlots: 0, setsFlagged: 0, daysFlagged: 0, cardioAdded: 0, untouchedValues: 0 };
 
   for (const meso of state.mesos) {
     // day index + exercise slot + set position -> shared slot id
@@ -217,6 +239,11 @@ export function migrateStructure(state) {
         if (!('skippedAt' in day)) {
           day.skippedAt = null;
           stats.daysFlagged += 1;
+        }
+        // v5. Additive only: an existing block is never rebuilt or cleared.
+        if (!day.cardio || typeof day.cardio !== 'object') {
+          day.cardio = makeCardio();
+          stats.cardioAdded += 1;
         }
         for (const exercise of day.exercises ?? []) {
           exercise.sets?.forEach((set, i) => {
@@ -340,6 +367,7 @@ export function createMeso({ name, split = DEFAULT_SPLIT, library = [] }) {
           label: day.label,
           finishedAt: null,
           skippedAt: null,
+          cardio: makeCardio(),
           // Only week 1 carries the template's starting numbers; every later
           // week gets the same plan with empty fields.
           exercises: day.exercises.map((ex) => makeExercise(ex, {
@@ -443,6 +471,68 @@ export function dayProgress(day) {
     }
   }
   return { total, logged, skipped, pct: total ? logged / total : 0 };
+}
+
+/* ------------------------------------------------------------------ *
+ * Zone 2 cardio
+ * ------------------------------------------------------------------ */
+
+/**
+ * Minutes logged for a day, as a number. 0 when nothing is entered.
+ *
+ * Tolerates a day saved before v5 (no block at all) so every reader is safe
+ * on data the migration hasn't reached yet.
+ */
+export function cardioMinutes(day) {
+  const raw = parseFloat(day?.cardio?.zone2Minutes);
+  return Number.isFinite(raw) && raw > 0 ? raw : 0;
+}
+
+/** True once the day's goal is met. Going over still counts as met, not more. */
+export function cardioGoalMet(day) {
+  return cardioMinutes(day) >= CARDIO_DAILY_GOAL;
+}
+
+/**
+ * How full the ring draws, 0–1.
+ *
+ * Capped at 1 so 60 minutes reads as a complete ring rather than overflowing —
+ * the true number is never capped, only this visual fraction is.
+ */
+export function cardioFill(day) {
+  return Math.min(cardioMinutes(day) / CARDIO_DAILY_GOAL, 1);
+}
+
+/** Store typed minutes. Keeps the raw string; stamps when it last changed. */
+export function setCardioMinutes(day, value) {
+  if (!day.cardio || typeof day.cardio !== 'object') day.cardio = makeCardio();
+  day.cardio.zone2Minutes = value;
+  day.cardio.updatedAt = new Date().toISOString();
+}
+
+/**
+ * A week's cardio totals, for the weekly summary.
+ *
+ * `days` keeps every training day in order — including the ones with nothing
+ * logged — because the summary is as much about which days you missed as the
+ * total you hit.
+ */
+export function weekCardio(week) {
+  const days = (week?.days ?? []).map((day) => ({
+    label: day.label ?? day.name ?? day.key,
+    // Older saved days predate these labels; fall back rather than print undefined.
+    short: day.short ?? day.name ?? day.key,
+    minutes: cardioMinutes(day),
+    met: cardioGoalMet(day),
+  }));
+  const total = days.reduce((n, d) => n + d.minutes, 0);
+  return {
+    days,
+    total,
+    daysMet: days.filter((d) => d.met).length,
+    goal: CARDIO_WEEKLY_GOAL,
+    pct: Math.min(total / CARDIO_WEEKLY_GOAL, 1),
+  };
 }
 
 /** A day is exactly one of: skipped, finished, in progress, or untouched. */
