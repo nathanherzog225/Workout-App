@@ -4,6 +4,7 @@ A personal mesocycle workout tracker. Phone-only web app / PWA, no account, no s
 everything is stored on-device in the browser and backed up with an export button.
 
 - **Mesocycle:** 8 weeks × 4 training days (Thursday, Friday, Saturday, Monday)
+- **Zone 2 cardio:** one number a day against a 45-minute goal, 180 a week
 - **Storage:** one JSON blob in `localStorage`, written automatically on every change
 - **Backup:** export to a `.json` file, restore from one
 
@@ -21,6 +22,15 @@ set you left blank falls back to the placeholder it was showing.
 carries `skippedAt`; a single set carries `skipped`. Skipping a day sets one
 timestamp and never touches individual sets, so Unskip restores the previous
 state exactly. Sets you logged before skipping the day stay logged.
+
+**Zone 2 cardio is tracked separately from lifting.** Each day carries its own
+`cardio` field — one number of minutes, nothing to do with sets. It has no
+look-back, no carry-forward and no trend arrows: unlike a set, a cardio entry is
+only ever "how many minutes today". The ring fills toward the 45-minute daily
+goal and caps at full when you go over, while the number itself is stored and
+shown uncapped. The weekly summary totals the four days against 180 and marks
+which of them hit the full 45; it lives on the home screen for whichever week is
+selected, and also pops once when finishing the last day of a week.
 
 **References look back per set, not per week.** Each set finds the most recent
 earlier week where *that same set slot* was actually performed — `logged` and
@@ -92,6 +102,6 @@ js/
   catalog.js          the exercise library (315 exercises)
   template.js         the training split a new meso is built from
   sheet.js            bottom sheets
-  views/              screens
+  views/              screens (home, day, cardio, picker)
 icons/                app icons
 ```

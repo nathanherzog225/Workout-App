@@ -2,6 +2,7 @@ import { el, icon, toast } from '../ui.js';
 import { commit } from '../store.js';
 import { openSheet } from '../sheet.js';
 import { muscleColor, muscleName } from '../constants.js';
+import { renderWeekCardio } from './cardio.js';
 import {
   createMeso, copyMesoAsNew, seedLibrary, getMeso,
   dayProgress, weekProgress, dayMuscles, dayStatus,
@@ -47,6 +48,10 @@ export function renderHome({ state, route = {}, mount, dock, navigate }) {
     mount.append(renderDayCard(day, () =>
       navigate({ name: 'day', mesoId: meso.id, weekIndex, dayIndex })));
   }
+
+  // Kept on the home screen rather than shown once on finish, so the week's
+  // cardio total stays retrievable after the week is done.
+  mount.append(renderWeekCardio(week));
 
   mount.append(renderMesoActions({ state, meso, isActive, navigate }));
   if (isActive && past.length) mount.append(renderArchive(past, navigate));

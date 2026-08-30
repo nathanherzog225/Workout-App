@@ -29,6 +29,7 @@ const MODULES = [
   'js/sheet.js',
   'js/backup.js',
   'js/model.js',
+  'js/views/cardio.js',
   'js/views/home.js',
   'js/views/day.js',
   'js/views/picker.js',
